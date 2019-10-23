@@ -35,15 +35,16 @@ public class BookingManagerImpl implements BookingManager {
             return false;
 
 
-
-        bookings.add(booking);
-        availableRoomsOnDate.get(booking.getBookingDate()).remove( new Room(booking.getRoomNumber()) );
+        synchronized (this) {
+            bookings.add(booking);
+            availableRoomsOnDate.get(booking.getBookingDate()).remove(new Room(booking.getRoomNumber()));
+        }
         return true;
     }
 
     @Override
     public List<Room> findAvailableRoomsByDate(LocalDate bookingDate) {
-        return availableRoomsOnDate.get(bookingDate);
+        return   availableRoomsOnDate.getOrDefault(bookingDate, new ArrayList<>());
     }
 
     @Override
