@@ -23,9 +23,7 @@ public class BookingManagerImpl implements BookingManager {
 
     }
     @Override
-    public boolean storeBooking(Booking booking) {
-        if (bookings.contains( booking ))
-            return false;
+    public synchronized boolean storeBooking(Booking booking) {
 
         if (! availableRoomsOnDate.containsKey(booking.getBookingDate()) )
             return false;
@@ -35,22 +33,26 @@ public class BookingManagerImpl implements BookingManager {
             return false;
 
 
-        synchronized (this) {
-            bookings.add(booking);
-            availableRoomsOnDate.get(booking.getBookingDate()).remove(new Room(booking.getRoomNumber()));
-        }
+
+        bookings.add(booking);
+        availableRoomsOnDate.get(booking.getBookingDate()).remove(new Room(booking.getRoomNumber()));
+
         return true;
     }
 
     @Override
-    public List<Room> findAvailableRoomsByDate(LocalDate bookingDate) {
+    public synchronized List<Room> findAvailableRoomsByDate(LocalDate bookingDate) {
         return   availableRoomsOnDate.getOrDefault(bookingDate, new ArrayList<>());
     }
 
     @Override
-    public List<Booking> findAllBookingsByGuest(String guestName) {
+    public synchronized List<Booking> findAllBookingsByGuest(String guestName) {
         return bookings.parallelStream().filter( b -> b.getGuestName().equals(guestName)).collect(Collectors.toList());
     }
 
 
+    @Override
+    public synchronized  int bookingCnt(){
+        return bookings.size();
+    }
 }

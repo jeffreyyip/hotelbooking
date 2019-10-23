@@ -161,4 +161,18 @@ public class BookingManagerCMTest {
 
     }
 
+    @Test
+    public void testCnt(){
+
+        for (int i = 0; i<100; i++){
+            bookingManager.storeBooking( new Booking("J", 1, LocalDate.now().plusDays(i)));
+        }
+
+        for (int i = 0; i<100; i++){
+            bookingManager.storeBooking( new Booking("J", 1, LocalDate.now().plusDays(i)));
+        }
+
+        assertEquals(100, bookingManager.bookingCnt());
+    }
+
 }

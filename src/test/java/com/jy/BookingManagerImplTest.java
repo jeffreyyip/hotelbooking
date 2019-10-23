@@ -3,6 +3,7 @@ package com.jy;
 import org.junit.Before;
 import org.junit.Test;
 
+import java.awt.print.Book;
 import java.time.LocalDate;
 import java.util.List;
 
@@ -157,5 +158,21 @@ public class BookingManagerImplTest {
         assertEquals( NUMBER_OF_ROOMS, rooms2.size() );
 
     }
+
+    @Test
+    public void testCnt(){
+
+        for (int i = 0; i<100; i++){
+            bookingManager.storeBooking( new Booking("J", 1, LocalDate.now().plusDays(i)));
+        }
+
+        for (int i = 0; i<100; i++){
+            bookingManager.storeBooking( new Booking("J", 1, LocalDate.now().plusDays(i)));
+        }
+
+        assertEquals(100, bookingManager.bookingCnt());
+    }
+
+
 
 }

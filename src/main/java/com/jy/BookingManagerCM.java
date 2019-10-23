@@ -5,6 +5,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReferenceArray;
 
 public class BookingManagerCM implements BookingManager {
@@ -22,10 +23,10 @@ public class BookingManagerCM implements BookingManager {
     @Override
     public boolean storeBooking(Booking newBooking) {
 
-        if (newBooking.getRoomNumber() > numberOfRooms || newBooking.getRoomNumber() < 0 )
+        if (newBooking.getRoomNumber() > numberOfRooms || newBooking.getRoomNumber() <= 0 )
             return false;
 
-        AtomicReferenceArray<Booking> bookings = booked.computeIfAbsent( newBooking.getBookingDate(), date -> new AtomicReferenceArray<>( numberOfRooms ) );
+        AtomicReferenceArray<Booking> bookings = booked.computeIfAbsent( newBooking.getBookingDate(), date -> new AtomicReferenceArray<>( numberOfRooms +1 ) );
 
         Booking booking = bookings.get(newBooking.getRoomNumber());
 
@@ -39,8 +40,8 @@ public class BookingManagerCM implements BookingManager {
     public List<Room> findAvailableRoomsByDate(LocalDate bookingDate) {
         List<Room> rooms = new ArrayList<>();
 
-        AtomicReferenceArray<Booking> bookings = booked.computeIfAbsent( bookingDate, date -> new AtomicReferenceArray<>( numberOfRooms ) );
-        for (int i = 0; i< bookings.length(); i++){
+        AtomicReferenceArray<Booking> bookings = booked.computeIfAbsent( bookingDate, date -> new AtomicReferenceArray<>( numberOfRooms +1 ) );
+        for (int i = 1; i< bookings.length(); i++){
             if ( bookings.get(i) == null)
                 rooms.add( new Room(i));
         }
@@ -53,7 +54,7 @@ public class BookingManagerCM implements BookingManager {
         List<Booking> bookings = new ArrayList<>();
 
         booked.forEach( (k, v) -> {
-                    for (int i = 0; i < v.length(); i++){
+                    for (int i = 1; i < v.length(); i++){
                         if (v.get(i) != null  && v.get(i).getGuestName().equals(guestName) )
                             bookings.add( v.get(i ));
                     }
@@ -61,5 +62,20 @@ public class BookingManagerCM implements BookingManager {
                 );
 
         return bookings;
+    }
+
+    @Override
+    public int bookingCnt() {
+        final AtomicInteger cnt = new AtomicInteger();
+        booked.forEach( (k, v) -> {
+                    for (int i = 1; i < v.length(); i++){
+                        if (v.get(i) != null   )
+                            cnt.incrementAndGet();
+                    }
+                }
+        );
+
+
+        return cnt.get();
     }
 }

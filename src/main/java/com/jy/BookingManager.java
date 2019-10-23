@@ -12,4 +12,5 @@ public interface BookingManager {
 
     List<Booking> findAllBookingsByGuest(String guestName);
 
+    int bookingCnt();
 }

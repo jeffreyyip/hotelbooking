@@ -33,11 +33,12 @@ public class Booking {
         if (o == null || getClass() != o.getClass()) return false;
         Booking booking = (Booking) o;
         return roomNumber == booking.roomNumber &&
+                guestName.equals(booking.guestName) &&
                 bookingDate.equals(booking.bookingDate);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(roomNumber, bookingDate);
+        return Objects.hash(guestName, roomNumber, bookingDate);
     }
 }
