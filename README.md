@@ -2,7 +2,9 @@
 
 
 Interface: BookingManager
+
 Implementation: BookingManagerCMC
+
 Unit Test: BookingManagerCMCTest
 
 Client main: App
