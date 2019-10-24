@@ -4,21 +4,21 @@ import org.junit.Before;
 import org.junit.Ignore;
 import org.junit.Test;
 
+import java.awt.print.Book;
 import java.time.LocalDate;
 import java.util.List;
 
 import static org.junit.Assert.*;
 
-public class BookingManagerCMTest {
-
+public class BookingManagerCMCTest {
 
     private static final int NUMBER_OF_ROOMS = 10;
-    private static final int NUMBER_OF_BOOKING_DATE = 365;
+    private static final int NUMBER_OF_BOOKING_DATE_EXPECTED = 365;
     private BookingManager bookingManager;
 
     @Before
     public void setUp() {
-        bookingManager = new BookingManagerCM(NUMBER_OF_ROOMS, NUMBER_OF_BOOKING_DATE);
+        bookingManager = new BookingManagerCMC(NUMBER_OF_ROOMS, NUMBER_OF_BOOKING_DATE_EXPECTED);
     }
 
 
@@ -56,6 +56,20 @@ public class BookingManagerCMTest {
     }
 
     @Test
+    public void findAvailableRooms_storeBooking_findBookingByGuest(){
+
+        LocalDate bookingDate = LocalDate.now();
+
+        List<Room> rooms = bookingManager.findAvailableRoomsByDate( bookingDate );
+
+        Booking newBooking = new Booking("John", rooms.get(0).getNumber(), bookingDate );
+
+        boolean rtn = bookingManager.storeBooking( newBooking );
+
+        assertTrue(rtn);
+    }
+
+    @Test
     public void findAllBookingsByGuestForTwoBooking() {
         Booking booking;
 
@@ -67,7 +81,7 @@ public class BookingManagerCMTest {
 
         bookingManager.storeBooking(booking);
 
-        List<Booking> bookings = bookingManager.findAllBookingsByGuest("John");
+        List<Booking> bookings = bookingManager.findAllBookingsByGuest("JOHN");
 
         assertNotNull(bookings);
         assertEquals(2, bookings.size());
@@ -108,21 +122,6 @@ public class BookingManagerCMTest {
 
     }
 
-    @Ignore
-    @Test
-    public void givenBookingDateIsNotAvailable_whenBookingIsStored_thenFalse() {
-        LocalDate bookingDate = LocalDate.now().plusDays( -1 );
-
-        List<Room> rooms = bookingManager.findAvailableRoomsByDate( bookingDate );
-
-        assertNotNull(rooms);
-        assertEquals(0, rooms.size());
-
-        boolean rtn = bookingManager.storeBooking( new Booking( "John", 1, bookingDate ));
-
-        assertFalse(rtn);
-
-    }
 
     @Test
     public void givenRoomNumberIsNotAvailable_whenBookingIsStored_thenFalse() {

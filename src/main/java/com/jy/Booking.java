@@ -1,10 +1,9 @@
 package com.jy;
 
 import java.time.LocalDate;
-import java.util.Date;
 import java.util.Objects;
 
-public class Booking {
+public final class Booking {
     private final String guestName;
     private final int roomNumber;
     private final LocalDate bookingDate;

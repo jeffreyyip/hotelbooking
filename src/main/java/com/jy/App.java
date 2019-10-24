@@ -2,10 +2,7 @@ package com.jy;
 
 import java.time.LocalDate;
 import java.util.*;
-import java.util.concurrent.Callable;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-import java.util.concurrent.TimeUnit;
+import java.util.concurrent.*;
 
 /**
  * Hello world!
@@ -13,13 +10,12 @@ import java.util.concurrent.TimeUnit;
  */
 public class App 
 {
-    public static final int NUMBER_OF_ROOM = 50;
+    public static final int NUMBER_OF_ROOM = 100;
     public static final int NUMBER_OF_DATE = 365;
-    public static final int PARAM_BOOKING = 10000;
-    public static final int THREAD_CNT = 50;
-    public static final BookingManager bm1 = new BookingManagerImpl(NUMBER_OF_ROOM, NUMBER_OF_DATE);
-    public static final BookingManager bm2 = new BookingManagerCM(NUMBER_OF_ROOM, NUMBER_OF_DATE);
-    public static final BookingManager bm3 = new BookingManagerCMC(NUMBER_OF_ROOM, NUMBER_OF_DATE);
+    public static final int PARAM_BOOKING = 30000;
+    public static final int THREAD_CNT = 10;
+
+    public static final ExecutorService service = Executors.newFixedThreadPool(THREAD_CNT);
 
 
     public static void main( String[] args ) throws InterruptedException
@@ -29,45 +25,42 @@ public class App
         System.out.println( uniqueBooking.size() );
 
 
-        long start1 = System.currentTimeMillis();
-        runWithThread(THREAD_CNT, genRunnables(bm1, bookings) );
-
-        System.out.println( bm1.bookingCnt() + " " + (System.currentTimeMillis() - start1));
+        runBM(new BookingManagerCMC(NUMBER_OF_ROOM, NUMBER_OF_DATE), bookings);
 
 
-        long start2 = System.currentTimeMillis();
-        runWithThread(THREAD_CNT, genRunnables(bm2, bookings) );
-
-        System.out.println( bm2.bookingCnt() + " " + (System.currentTimeMillis() - start2));
-
-        long start3 = System.currentTimeMillis();
-        runWithThread(THREAD_CNT, genRunnables(bm3, bookings) );
-
-        System.out.println( bm3.bookingCnt() + " " + (System.currentTimeMillis() - start3));
-
-    }
-    public static void runWithThread(int threadCnt, List<Callable<Boolean>> callables) throws InterruptedException{
-        ExecutorService service = Executors.newFixedThreadPool(threadCnt);
-        service.invokeAll(callables);
         service.shutdown();
-        service.awaitTermination(100, TimeUnit.SECONDS);
+        service.awaitTermination(10, TimeUnit.SECONDS);
+
     }
 
-    public static List<Callable<Boolean>> genRunnables(BookingManager bookingManager, List<Booking> booking){
+    private static void runBM(BookingManager bookingManager, List<Booking> bookings) throws InterruptedException{
+        CountDownLatch latch1 = new CountDownLatch(bookings.size());
+
+        runWithThread(bookingManager, genCallable(bookingManager, bookings, latch1), latch1 );
+
+    }
+
+    private static void runWithThread(BookingManager bookingManager, List<Callable<Boolean>> callables, CountDownLatch latch) throws InterruptedException{
+        long start = System.currentTimeMillis();
+
+        service.invokeAll(callables);
+        latch.await();
+        System.out.println( bookingManager.bookingCnt() + " " + (System.currentTimeMillis() - start));
+
+    }
+
+    private static List<Callable<Boolean>> genCallable(BookingManager bookingManager, List<Booking> booking, CountDownLatch latch){
 
         List<Callable<Boolean>> runnables = new ArrayList<>();
 
-        booking.forEach( b -> runnables.add( () -> { bookingManager.storeBooking(b); return true; } ) );
+        booking.forEach( b -> runnables.add( () -> { bookingManager.storeBooking(b); latch.countDown(); return true; } ) );
 
         return runnables;
     }
 
-    public static void run(BookingManager bookingManager, List<Booking> booking){
-        booking.forEach( b -> bookingManager.storeBooking(b));
-    }
 
 
-    public static List<Booking> generateBooking(){
+    private static List<Booking> generateBooking(){
 
 
         List<Booking> bookings = new ArrayList<>();

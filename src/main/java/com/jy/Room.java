@@ -2,7 +2,7 @@ package com.jy;
 
 import java.util.Objects;
 
-public class Room {
+public final class Room {
     private final int number;
 
     public Room(int number) {
