@@ -19,6 +19,7 @@ public class App
     public static final int THREAD_CNT = 50;
     public static final BookingManager bm1 = new BookingManagerImpl(NUMBER_OF_ROOM, NUMBER_OF_DATE);
     public static final BookingManager bm2 = new BookingManagerCM(NUMBER_OF_ROOM, NUMBER_OF_DATE);
+    public static final BookingManager bm3 = new BookingManagerCMC(NUMBER_OF_ROOM, NUMBER_OF_DATE);
 
 
     public static void main( String[] args ) throws InterruptedException
@@ -39,8 +40,12 @@ public class App
 
         System.out.println( bm2.bookingCnt() + " " + (System.currentTimeMillis() - start2));
 
-    }
+        long start3 = System.currentTimeMillis();
+        runWithThread(THREAD_CNT, genRunnables(bm3, bookings) );
 
+        System.out.println( bm3.bookingCnt() + " " + (System.currentTimeMillis() - start3));
+
+    }
     public static void runWithThread(int threadCnt, List<Callable<Boolean>> callables) throws InterruptedException{
         ExecutorService service = Executors.newFixedThreadPool(threadCnt);
         service.invokeAll(callables);

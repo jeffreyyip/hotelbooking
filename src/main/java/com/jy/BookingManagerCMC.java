@@ -8,15 +8,15 @@ import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReferenceArray;
 
-public class BookingManagerCM implements BookingManager {
+public class BookingManagerCMC implements BookingManager{
 
     private final int numberOfRooms;
 
-    private final ConcurrentMap<LocalDate, AtomicReferenceArray<Booking> > booked;
+    private final ConcurrentMap<LocalDate, AtomicReferenceArray<Booking>> booked;
 
-    public BookingManagerCM(int numberOfRooms, int numberOfDate) {
+    public BookingManagerCMC(int numberOfRooms, int numberOfBookingDate) {
         this.numberOfRooms = numberOfRooms;
-        booked = new ConcurrentHashMap<>();
+        booked = new ConcurrentHashMap<LocalDate, AtomicReferenceArray<Booking>>((int) (numberOfRooms * numberOfBookingDate * 1.5));
     }
 
     @Override
@@ -27,12 +27,14 @@ public class BookingManagerCM implements BookingManager {
 
         AtomicReferenceArray<Booking> bookings = booked.computeIfAbsent( newBooking.getBookingDate(), date -> new AtomicReferenceArray<>( numberOfRooms +1 ) );
 
+
         while ( bookings.get(newBooking.getRoomNumber() )== null) {
-            if( bookings.compareAndSet(newBooking.getRoomNumber(), null, newBooking) )
+            if (bookings.compareAndSet(newBooking.getRoomNumber(), null, newBooking) )
                 return true;
         };
 
         return false;
+
     }
 
     @Override
@@ -58,7 +60,7 @@ public class BookingManagerCM implements BookingManager {
                             bookings.add( v.get(i ));
                     }
                 }
-                );
+        );
 
         return bookings;
     }
