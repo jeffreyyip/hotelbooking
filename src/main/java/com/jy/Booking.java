@@ -40,4 +40,13 @@ public final class Booking {
     public int hashCode() {
         return Objects.hash(guestName, roomNumber, bookingDate);
     }
+
+    @Override
+    public String toString() {
+        return "Booking{" +
+                "guestName='" + guestName + '\'' +
+                ", roomNumber=" + roomNumber +
+                ", bookingDate=" + bookingDate +
+                '}';
+    }
 }

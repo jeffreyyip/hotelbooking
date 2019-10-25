@@ -30,6 +30,19 @@ public class BookingManagerCMCTest {
         assertTrue(rtn);
     }
 
+    @Test
+    public void storeBookingForAllRoomForOneDate() {
+        Booking booking = null;
+
+        for (int i = 0; i< NUMBER_OF_ROOMS; i ++) {
+            booking = new Booking("John", i, LocalDate.now());
+            boolean rtn = bookingManager.storeBooking( booking );
+
+        }
+
+        assertEquals(0, bookingManager.findAvailableRoomsByDate(LocalDate.now()).size());
+
+    }
 
 
     @Test
@@ -134,16 +147,6 @@ public class BookingManagerCMCTest {
 
     }
 
-    @Test
-    public void systemTest() {
-        List<Room> rooms1 = bookingManager.findAvailableRoomsByDate( LocalDate.now() );
-        List<Room> rooms2 = bookingManager.findAvailableRoomsByDate( LocalDate.now().plusDays(1) );
-
-        for (int i= 0; i < rooms1.size(); i++) {
-            assertNotSame( rooms1.get(i) , rooms2.get(i) );
-        }
-
-    }
 
     @Test
     public void givenBookingOnOneDate_whenFindRoomsOnAnotherDate_thenRoomsCountIsCorrect() {
@@ -158,20 +161,6 @@ public class BookingManagerCMCTest {
         assertEquals( NUMBER_OF_ROOMS - 1, rooms1.size() );
         assertEquals( NUMBER_OF_ROOMS, rooms2.size() );
 
-    }
-
-    @Test
-    public void testCnt(){
-
-        for (int i = 0; i<100; i++){
-            bookingManager.storeBooking( new Booking("J", 1, LocalDate.now().plusDays(i)));
-        }
-
-        for (int i = 0; i<100; i++){
-            bookingManager.storeBooking( new Booking("J", 1, LocalDate.now().plusDays(i)));
-        }
-
-        assertEquals(100, bookingManager.bookingCnt());
     }
 
 }

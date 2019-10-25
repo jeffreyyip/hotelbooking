@@ -8,7 +8,9 @@ import java.util.Objects;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.atomic.AtomicReferenceArray;
+import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 public class BookingManagerCMC implements BookingManager{
@@ -20,9 +22,10 @@ public class BookingManagerCMC implements BookingManager{
      * the array size equals to the number of rooms
      * each array element is corresponding to a room for particular date
      * if the array element is null; the room is available; otherwise it is booked
-     * array index is mapped by the room number for this implementation
-     * assume that room number started from 1 to max number of rooms
-     * change this assumption of array index and room number if needed
+     * Implementation assumption :
+     * array index is mapped by the room number for this implementation (array index equals room number)
+     * assume that room number started from 0 to (max number of rooms - 1)
+     * change this implementation of array index and room number if needed
      */
     private final ConcurrentMap<LocalDate, AtomicReferenceArray<Booking>> booked;
 
@@ -41,14 +44,14 @@ public class BookingManagerCMC implements BookingManager{
     @Override
     public boolean storeBooking(Booking newBooking) {
 
-        if (newBooking.getRoomNumber() > numberOfRooms || newBooking.getRoomNumber() <= 0 )
+        if (newBooking.getRoomNumber() >= numberOfRooms || newBooking.getRoomNumber() < 0 )
             return false;
 
-        AtomicReferenceArray<Booking> bookings = booked.computeIfAbsent( newBooking.getBookingDate(), date -> new AtomicReferenceArray<>( numberOfRooms +1 ) );
+        AtomicReferenceArray<Booking> bookings = booked.computeIfAbsent( newBooking.getBookingDate(), date -> new AtomicReferenceArray<>( numberOfRooms  ) );
 
 
         while ( bookings.get(newBooking.getRoomNumber() )== null) {
-            if (bookings.compareAndSet(newBooking.getRoomNumber(), null, new Booking(newBooking.getGuestName(), newBooking.getRoomNumber(), newBooking.getBookingDate()) ));
+            if (bookings.compareAndSet(newBooking.getRoomNumber(), null, new Booking(newBooking.getGuestName(), newBooking.getRoomNumber(), newBooking.getBookingDate()) ))
                 return true;
         }
 
@@ -56,13 +59,16 @@ public class BookingManagerCMC implements BookingManager{
 
     }
 
+    /**
+     * it is weakly consistent as the implementation is concurrent to individual room
+     */
     @Override
     public List<Room> findAvailableRoomsByDate(LocalDate bookingDate) {
         List<Room> rooms = new ArrayList<>();
 
-        AtomicReferenceArray<Booking> bookings = booked.computeIfAbsent( bookingDate, date -> new AtomicReferenceArray<>( numberOfRooms +1 ) );
+        AtomicReferenceArray<Booking> bookings = booked.computeIfAbsent( bookingDate, date -> new AtomicReferenceArray<>( numberOfRooms  ) );
 
-        for (int i = 1; i< bookings.length(); i++){
+        for (int i = 0; i < bookings.length(); i++){
             if ( bookings.get(i) == null)
                 rooms.add( new Room(i));
         }
@@ -72,33 +78,19 @@ public class BookingManagerCMC implements BookingManager{
 
     @Override
     public List<Booking> findAllBookingsByGuest(String guestName) {
-        List<Booking> bookings = new ArrayList<>();
+        return booked.values().parallelStream().flatMap( v -> Stream.of(asArray(v)) )
+                .filter(Objects::nonNull)
+                .collect(Collectors.toList());
 
-        booked.forEach( (k, v) -> {
-                    for (int i = 1; i < v.length(); i++){
-                        if (v.get(i) != null  && v.get(i).getGuestName().equalsIgnoreCase(guestName) )
-                            bookings.add( v.get(i ));
-                    }
-                }
-        );
+    }
 
+    private Booking[] asArray (AtomicReferenceArray<Booking> refArray) {
+        Booking[] bookings = new Booking[refArray.length()];
+        for (int i = 0; i< refArray.length(); i++){
+            bookings[i] = refArray.get(i);
+        }
         return bookings;
     }
 
-    @Override
-    public int bookingCnt() {
-
-        final AtomicInteger cnt = new AtomicInteger();
-        booked.forEach( (k, v) -> {
-                    for (int i = 1; i < v.length(); i++){
-                        if (v.get(i) != null   )
-                            cnt.incrementAndGet();
-                    }
-                }
-        );
-        return cnt.get();
-
-
-    }
 
 }
