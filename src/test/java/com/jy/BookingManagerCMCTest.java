@@ -69,6 +69,22 @@ public class BookingManagerCMCTest {
     }
 
     @Test
+    public void findAllBookingsByDifferentGuest() {
+
+        Booking booking = new Booking("John", 1, LocalDate.now() );
+        Booking booking2 = new Booking("Mary", 2, LocalDate.now() );
+
+        bookingManager.storeBooking(booking);
+        bookingManager.storeBooking(booking2);
+
+        List<Booking> bookings = bookingManager.findAllBookingsByGuest("John");
+
+        assertNotNull(bookings);
+        assertEquals(1, bookings.size());
+
+    }
+
+    @Test
     public void findAvailableRooms_storeBooking_findBookingByGuest(){
 
         LocalDate bookingDate = LocalDate.now();
@@ -83,7 +99,7 @@ public class BookingManagerCMCTest {
     }
 
     @Test
-    public void findAllBookingsByGuestForTwoBooking() {
+    public void findAllBookingsByGuestForTwoBookingIgnoreCase() {
         Booking booking;
 
         booking = new Booking("John", 1, LocalDate.now() );

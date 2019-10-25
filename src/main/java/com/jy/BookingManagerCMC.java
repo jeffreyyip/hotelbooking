@@ -80,6 +80,7 @@ public class BookingManagerCMC implements BookingManager{
     public List<Booking> findAllBookingsByGuest(String guestName) {
         return booked.values().parallelStream().flatMap( v -> Stream.of(asArray(v)) )
                 .filter(Objects::nonNull)
+                .filter( b -> b.getGuestName().equalsIgnoreCase(guestName))
                 .collect(Collectors.toList());
 
     }
